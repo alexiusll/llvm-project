@@ -80,7 +80,7 @@ static int gettok() {
 }
 
 //===----------------------------------------------------------------------===//
-// Abstract Syntax Tree (aka Parse Tree)
+// Abstract Syntax Tree (aka Parse Tree) 抽象语法树
 //===----------------------------------------------------------------------===//
 
 namespace {
@@ -115,7 +115,10 @@ class BinaryExprAST : public ExprAST {
 public:
   BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS,
                 std::unique_ptr<ExprAST> RHS)
-      : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+      : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {
+    // LHS = std::make_unique<ExprAST>();
+    // LHS = nullptr;
+  }
 };
 
 /// CallExprAST - Expression class for function calls.
@@ -157,7 +160,7 @@ public:
 } // end anonymous namespace
 
 //===----------------------------------------------------------------------===//
-// Parser
+// Parser 解析器
 //===----------------------------------------------------------------------===//
 
 /// CurTok/getNextToken - Provide a simple token buffer.  CurTok is the current
@@ -424,7 +427,7 @@ static void MainLoop() {
 }
 
 //===----------------------------------------------------------------------===//
-// Main driver code.
+// Main driver code. 主驱动代码
 //===----------------------------------------------------------------------===//
 
 int main() {
