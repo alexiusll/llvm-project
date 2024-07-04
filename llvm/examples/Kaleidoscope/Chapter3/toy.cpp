@@ -9,6 +9,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -17,6 +18,29 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <cstdarg>
+#include <fstream>
+#include <iostream>
+
+// 是否开启调试信息
+#define DEBUG_MESG 1
+
+// 宏定义，用于输出调试信息
+#if DEBUG_MESG
+void debugPrint(const char *format, ...) {
+  va_list args;
+  va_start(args, format); // 初始化可变参数列表
+  std::cerr << "DEBUG: ";
+  vfprintf(stderr, format, args); // 输出格式化的调试信息
+  std::cerr << std::endl;
+  va_end(args); // 清理可变参数列表
+}
+#define DEBUG_PRINT(...) debugPrint(__VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
 
 using namespace llvm;
 

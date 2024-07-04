@@ -7,6 +7,30 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+#include <fstream>
+#include <cstdarg>
+
+// 是否开启调试信息
+#define DEBUG_MESG 1
+
+// 宏定义，用于输出调试信息
+#if DEBUG_MESG
+void debugPrint(const char *format, ...) {
+  va_list args;
+  va_start(args, format); // 初始化可变参数列表
+  std::cerr << "DEBUG: ";
+  vfprintf(stderr, format, args); // 输出格式化的调试信息
+  std::cerr << std::endl;
+  va_end(args); // 清理可变参数列表
+}
+#define DEBUG_PRINT(...) debugPrint(__VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
+
+
 //===----------------------------------------------------------------------===//
 // Lexer 词法分析器
 //===----------------------------------------------------------------------===//
@@ -21,18 +45,41 @@ enum Token {
   tok_extern = -3,
 
   // primary
-  tok_identifier = -4,
+  tok_identifier = -4, // 标识符
   tok_number = -5
 };
+
+// 用于将枚举值映射到对应的字符串
+const char *getTokenName(Token token) {
+  switch (token) {
+  case tok_eof:
+    return "tok_eof";
+  case tok_def:
+    return "tok_def";
+  case tok_extern:
+    return "tok_extern";
+  case tok_identifier:
+    return "tok_identifier";
+  case tok_number:
+    return "tok_number";
+  default:
+    return "Unknown Token";
+  }
+}
 
 static std::string IdentifierStr; // Filled in if tok_identifier
 static double NumVal;             // Filled in if tok_number
 
+static int LastChar = ' ';
+
 /// gettok - Return the next token from standard input.
 static int gettok() {
-  static int LastChar = ' ';
+  // static int LastChar = ' ';
 
-  // Skip any whitespace.
+  // DEBUG_PRINT("gettok():: 执行前状态 LastChar: %c", LastChar);
+
+  // isspace 是一个标准库函数，用于检查给定字符是否是空白字符
+  // 空白字符通常包括空格 (' ')、换行符 ('\n')、水平制表符 ('\t')、垂直制表符 ('\v')、回车符 ('\r') 和换页符 ('\f')
   while (isspace(LastChar))
     LastChar = getchar();
 
@@ -65,12 +112,12 @@ static int gettok() {
       LastChar = getchar();
     while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
 
-    if (LastChar != EOF)
+    if (LastChar != EOF)  
       return gettok();
   }
 
   // Check for end of file.  Don't eat the EOF.
-  if (LastChar == EOF)
+  if (LastChar == EOF) // 输入流结束
     return tok_eof;
 
   // Otherwise, just return the character as its ascii value.
@@ -167,12 +214,26 @@ public:
 /// token the parser is looking at.  getNextToken reads another token from the
 /// lexer and updates CurTok with its results.
 static int CurTok;
-static int getNextToken() { return CurTok = gettok(); }
+static int getNextToken() {
+  CurTok = gettok();
 
-/// BinopPrecedence - This holds the precedence for each binary operator that is
-/// defined.
-static std::map<char, int> BinopPrecedence;
+  if (CurTok > 0) {
+    DEBUG_PRINT("getNextToken():: 类型: %s , token: %c",
+                getTokenName(static_cast<Token>(CurTok)), CurTok);
+  } else {
+    DEBUG_PRINT("getNextToken():: 类型: %s , token: %d",
+                getTokenName(static_cast<Token>(CurTok)), CurTok);
+  }
 
+  return CurTok;
+}
+
+// 运算符优先级
+/// BinopPrecedence - 它为定义的每个二进制运算符 保存优先级。
+static std::map<char, int> BinopPrecedence = {
+    {'<', 10}, {'-', 20}, {'+', 20}, {'*', 40}};
+
+// 获取优先级
 /// GetTokPrecedence - Get the precedence of the pending binary operator token.
 static int GetTokPrecedence() {
   if (!isascii(CurTok))
@@ -406,7 +467,11 @@ static void HandleTopLevelExpression() {
 /// top ::= definition | external | expression | ';'
 static void MainLoop() {
   while (true) {
-    fprintf(stderr, "ready> ");
+
+    if (LastChar == '\n') {
+      fprintf(stderr, "ready> ");
+    }
+
     switch (CurTok) {
     case tok_eof:
       return;
@@ -433,10 +498,10 @@ static void MainLoop() {
 int main() {
   // Install standard binary operators.
   // 1 is lowest precedence.
-  BinopPrecedence['<'] = 10;
-  BinopPrecedence['+'] = 20;
-  BinopPrecedence['-'] = 20;
-  BinopPrecedence['*'] = 40; // highest.
+  //BinopPrecedence['<'] = 10;
+  //BinopPrecedence['+'] = 20;
+  //BinopPrecedence['-'] = 20;
+  //BinopPrecedence['*'] = 40; // highest.
 
   // Prime the first token.
   fprintf(stderr, "ready> ");
